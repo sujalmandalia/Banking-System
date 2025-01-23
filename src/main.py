@@ -6,18 +6,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-os.environ['PERSISTENCE_MODULE'] = os.getenv('PERSISTENCE_MODULE')
-os.environ['POSTGRES_DBNAME'] = os.getenv('POSTGRES_DBNAME')
-os.environ['POSTGRES_HOST'] = os.getenv('POSTGRES_HOST')
-os.environ['POSTGRES_PORT'] = os.getenv('POSTGRES_PORT')
-os.environ['POSTGRES_USER'] = os.getenv('POSTGRES_USER')
-os.environ['POSTGRES_PASSWORD'] = os.getenv('POSTGRES_PASSWORD')
+os.environ["PERSISTENCE_MODULE"] = os.getenv("PERSISTENCE_MODULE")
+os.environ["POSTGRES_DBNAME"] = os.getenv("POSTGRES_DBNAME")
+os.environ["POSTGRES_HOST"] = os.getenv("POSTGRES_HOST")
+os.environ["POSTGRES_PORT"] = os.getenv("POSTGRES_PORT")
+os.environ["POSTGRES_USER"] = os.getenv("POSTGRES_USER")
+os.environ["POSTGRES_PASSWORD"] = os.getenv("POSTGRES_PASSWORD")
+
 
 def open_account(app):
     full_name = input("Enter full name: ")
     email = input("Enter email address: ")
     account_id = app.open_account(full_name, email)
     print(f"Account opened successfully. Account ID: {account_id}")
+
 
 def withdraw_cash(app):
     account_id = input("Enter account ID: ")
@@ -29,6 +31,7 @@ def withdraw_cash(app):
     except Exception as e:
         print(f"Error: {e}")
 
+
 def credit_account(app):
     account_id = input("Enter account ID: ")
     amount = Decimal(input("Enter amount to credit: "))
@@ -38,6 +41,7 @@ def credit_account(app):
     except Exception as e:
         print(f"Error: {e}")
 
+
 def close_account(app):
     account_id = input("Enter account ID: ")
     try:
@@ -45,17 +49,19 @@ def close_account(app):
         print("Account closed successfully.")
     except Exception as e:
         print(f"Error: {e}")
-        
+
+
 def check_balance(app):
     account_id = input("Enter account ID: ")
     try:
-        balance =  app.get_balance(UUID(account_id))
+        balance = app.get_balance(UUID(account_id))
         print(f"Account Blance is {balance}")
     except Exception as e:
         print(f"Error: {e}")
 
+
 def main():
-  
+
     app = BankAccountApplication()
 
     while True:
