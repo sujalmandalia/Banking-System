@@ -27,11 +27,17 @@ class BankAccount(Aggregate):
 
   def check_account_is_not_closed(self):
     if self.is_closed:
-      raise AccountClosedError({"account_id":self.id})
+      raise AccountClosedError(
+                f"Account {self.id} is closed and cannot perform this operation."
+            )
+
     
   def check_has_sufficient_funds(self, amount: Decimal):
     if self.balance < amount:
-      raise InsufficientFundsError({"account_id": self.id})
+      raise InsufficientFundsError(
+        f"Insufficient funds in account {self.id}. "
+        f"Attempted to debit {amount}, but the balance is {self.balance}."
+      )
     
 class TransactionError(Exception):
     pass

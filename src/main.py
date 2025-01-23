@@ -1,7 +1,17 @@
+import os
 from decimal import Decimal
 from uuid import UUID
-
 from application.service import BankAccountApplication
+from dotenv import load_dotenv
+
+load_dotenv()
+
+os.environ['PERSISTENCE_MODULE'] = os.getenv('PERSISTENCE_MODULE')
+os.environ['POSTGRES_DBNAME'] = os.getenv('POSTGRES_DBNAME')
+os.environ['POSTGRES_HOST'] = os.getenv('POSTGRES_HOST')
+os.environ['POSTGRES_PORT'] = os.getenv('POSTGRES_PORT')
+os.environ['POSTGRES_USER'] = os.getenv('POSTGRES_USER')
+os.environ['POSTGRES_PASSWORD'] = os.getenv('POSTGRES_PASSWORD')
 
 def open_account(app):
     full_name = input("Enter full name: ")
@@ -17,8 +27,7 @@ def withdraw_cash(app):
         app.withdraw_funds(UUID(account_id), amount)
         print("Withdrawal successful.")
     except Exception as e:
-        print("Error:")
-        print(e)
+        print(f"Error: {e}")
 
 def credit_account(app):
     account_id = input("Enter account ID: ")
