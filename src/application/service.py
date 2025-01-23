@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from typing import TYPE_CHECKING
 
 from eventsourcing.application import Application,AggregateNotFoundError
@@ -24,7 +23,7 @@ class BankAccountApplication(Application):
      try:
         return self.repository.get(account_id)
      except AggregateNotFoundError:
-        raise AccountNotFoundError() from None
+        raise AccountNotFoundError(f"Account with ID {account_id} not found.") from None
   
   def get_balance(self,account_id:UUID)->Decimal:
      account = self.get_account(account_id)
