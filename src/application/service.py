@@ -22,11 +22,16 @@ class BankAccountApplication(Application):
 
     def get_account(self, account_id: UUID) -> BankAccount:
         try:
+            # print(self.repository.get(account_id))
             return self.repository.get(account_id)
         except AggregateNotFoundError:
             raise AccountNotFoundError(
                 f"Account with ID {account_id} not found."
-            ) from None
+                ) from None
+        except Exception as e:
+            raise RuntimeError(
+                    f"here An unexpected error occurred while"
+                    f"fetching account {account_id}") from e
 
     def get_balance(self, account_id: UUID) -> Decimal:
         account = self.get_account(account_id)
