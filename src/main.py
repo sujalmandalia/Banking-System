@@ -63,6 +63,10 @@ def check_balance(app):
 def main():
 
     app = BankAccountApplication()
+    # notifications = app.notification_log.select(
+    #     start=1, limit=2
+    # )
+    # print(f"Notifications {notifications}")
 
     while True:
         print("\nChoose an option:")
