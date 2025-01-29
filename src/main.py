@@ -2,7 +2,7 @@ import os
 from decimal import Decimal
 from uuid import UUID
 from application.service import BankAccountApplication
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore
 
 load_dotenv()
 
@@ -55,18 +55,18 @@ def check_balance(app):
     account_id = input("Enter account ID: ")
     try:
         balance = app.get_balance(UUID(account_id))
-        print(f"Account Blance is {balance}")
+        print(f"Account Balance is {balance}")
     except Exception as e:
         print(f"Error: {e}")
+
+
+def get_all_accounts(app):
+    app.get_all_accounts()
 
 
 def main():
 
     app = BankAccountApplication()
-    # notifications = app.notification_log.select(
-    #     start=1, limit=2
-    # )
-    # print(f"Notifications {notifications}")
 
     while True:
         print("\nChoose an option:")
@@ -74,7 +74,8 @@ def main():
         print("2. Withdraw Cash")
         print("3. Credit Account")
         print("4. Check Balance")
-        print("5. Close Account")
+        print("5. Get All Accounts")
+        print("6. Close Account")
         print("6. Exit")
 
         choice = input("Enter your choice: ")
@@ -88,6 +89,8 @@ def main():
         elif choice == "4":
             check_balance(app)
         elif choice == "5":
+            get_all_accounts(app)
+        elif choice == "6":
             close_account(app)
         elif choice == "6":
             print("Exiting... Goodbye!")
