@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-
+from eventsourcing.domain import OriginatorVersionError
 from eventsourcing.application import Application, AggregateNotFoundError
 from domain.model import BankAccount
-
+from config.dbconfig import cursor
 
 if TYPE_CHECKING:
     from decimal import Decimal
@@ -27,15 +27,50 @@ class BankAccountApplication(Application):
         except AggregateNotFoundError:
             raise AccountNotFoundError(
                 f"Account with ID {account_id} not found."
-                ) from None
-        except Exception as e:
+            ) from None
+        except OriginatorVersionError as ve:
+            print(f"Version error for account {account_id}: {ve}")
             raise RuntimeError(
-                    f"here An unexpected error occurred while"
-                    f"fetching account {account_id}") from e
+                f"A version conflict occurred while {account_id}."
+            ) from ve
+        except Exception as e:
+            print(f"Unexpected error while fetching account {account_id}: {e}")
+            raise RuntimeError(
+                f"An unexpected error occurred account {account_id}."
+            ) from e
+
+    def get_current_state_account(self, account_id):
+        query = """SELECT
+    originator_id,
+    SUM(
+        CASE
+            WHEN topic = 'domain.model:BankAccount.Credited' THEN (
+                (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
+            )::NUMERIC
+            WHEN topic = 'domain.model:BankAccount.Debited' THEN -(
+                (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
+            )::NUMERIC
+            WHEN topic = 'domain.model:BankAccount.Opened' THEN 0
+        END
+    ) as balance
+    FROM bankaccountapplication_events
+    WHERE originator_id = %s
+    group by originator_id;"""
+        cursor.execute(query, (str(account_id),))
+        account = cursor.fetchone()
+        if account:
+            return account
+        else:
+            raise Exception("Account not found")
 
     def get_balance(self, account_id: UUID) -> Decimal:
-        account = self.get_account(account_id)
-        return account.balance
+        # For SQL Query
+        account = self.get_current_state_account(account_id=account_id)
+        balance = account[-1]
+        return balance
+        # For repository
+        # account = self.get_account(account_id)
+        # return account.balance
 
     def deposit_funds(self, credit_account_id: UUID, amount: Decimal) -> None:
         account = self.get_account(credit_account_id)
@@ -60,6 +95,39 @@ class BankAccountApplication(Application):
         account = self.get_account(account_id)
         account.close()
         self.save(account)
+
+    def get_all_accounts(self):
+        query = """
+            SELECT
+    originator_id,
+    SUM(
+        CASE
+            WHEN topic = 'domain.model:BankAccount.Credited' THEN (
+                (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
+            )::NUMERIC
+            WHEN topic = 'domain.model:BankAccount.Debited' THEN -(
+                (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
+            )::NUMERIC
+            WHEN topic = 'domain.model:BankAccount.Opened' THEN 0
+        END
+    ) as balance,
+        CASE
+        WHEN COUNT(
+            CASE WHEN topic = 'domain.model:BankAccount.Closed' THEN 1
+            END
+        ) > 0 THEN 'closed'
+        ELSE 'opened'
+    END AS status
+    FROM bankaccountapplication_events
+    group by originator_id
+        """
+        cursor.execute(query)
+        result = cursor.fetchall()
+        for item in result:
+            print(f"Account Number:{item[0]}")
+            print(f"Account Balance:{item[1]}")
+            print(f"Account Status:{item[2]}")
+            print("---------------------------")
 
 
 class AccountNotFoundError(Exception):
