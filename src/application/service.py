@@ -96,38 +96,53 @@ class BankAccountApplication(Application):
         account.close()
         self.save(account)
 
+    # def get_all_accounts(self):
+    #     query = """
+    #         SELECT
+    #         originator_id,
+    #         SUM(
+    #         CASE
+    #             WHEN topic = 'domain.model:BankAccount.Credited' THEN (
+    #                 (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
+    #             )::NUMERIC
+    #             WHEN topic = 'domain.model:BankAccount.Debited' THEN -(
+    #                 (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
+    #             )::NUMERIC
+    #             WHEN topic = 'domain.model:BankAccount.Opened' THEN 0
+    #         END
+    #     ) as balance,
+    #         CASE
+    #         WHEN COUNT(
+    #             CASE WHEN topic = 'domain.model:BankAccount.Closed' THEN 1
+    #             END
+    #         ) > 0 THEN 'closed'
+    #         ELSE 'opened'
+    #     END AS status
+    #     FROM bankaccountapplication_events
+    #     group by originator_id
+    #     """
+    #     cursor.execute(query)
+    #     result = cursor.fetchall()
+    #     for item in result:
+    #         print(f"Account Number:{item[0]}")
+    #         print(f"Account Balance:{item[1]}")
+    #         print(f"Account Status:{item[2]}")
+    #         print("---------------------------")
+
     def get_all_accounts(self):
         query = """
-            SELECT
-    originator_id,
-    SUM(
-        CASE
-            WHEN topic = 'domain.model:BankAccount.Credited' THEN (
-                (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
-            )::NUMERIC
-            WHEN topic = 'domain.model:BankAccount.Debited' THEN -(
-                (convert_from(state, 'UTF8')::jsonb)->'amount'->>'_data_'
-            )::NUMERIC
-            WHEN topic = 'domain.model:BankAccount.Opened' THEN 0
-        END
-    ) as balance,
-        CASE
-        WHEN COUNT(
-            CASE WHEN topic = 'domain.model:BankAccount.Closed' THEN 1
-            END
-        ) > 0 THEN 'closed'
-        ELSE 'opened'
-    END AS status
-    FROM bankaccountapplication_events
-    group by originator_id
+        select distinct originator_id
+        from bankaccountapplication_events;
         """
         cursor.execute(query)
-        result = cursor.fetchall()
-        for item in result:
-            print(f"Account Number:{item[0]}")
-            print(f"Account Balance:{item[1]}")
-            print(f"Account Status:{item[2]}")
-            print("---------------------------")
+        aggregateIds = cursor.fetchall()
+        for aggregates in aggregateIds:
+            account_id = aggregates[0]
+            account_info = self.repository.get(account_id)
+            account_balance = account_info.balance
+            # account_status = account_info.is_closed
+            print(f"The account {account_id} and balance is {account_balance}")
+            print("----------------------------------------------------------")
 
 
 class AccountNotFoundError(Exception):
